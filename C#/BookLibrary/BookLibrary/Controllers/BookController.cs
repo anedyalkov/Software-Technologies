@@ -28,7 +28,7 @@ namespace BookLibrary.Controllers
 
                 if (book == null)
                 {
-                    return new HttpNotFoundResult($"No book found. Please check the book id.");
+                    return new HttpNotFoundResult($"Cannot find book with ID {id}.");
                 }
 
                 return View(book);
@@ -63,46 +63,117 @@ namespace BookLibrary.Controllers
         }
 
         // GET: Book/Edit/5
+        [Authorize]
         public ActionResult Edit(int id)
         {
-            return View();
+            using (var db = new ApplicationDbContext())
+            {
+                var book = db.Books.SingleOrDefault(b => b.Id == id);
+
+                if (book == null)
+                {
+                    return new HttpNotFoundResult($"No book found. Please check the book id.");
+                }
+
+                var userid = User.Identity.GetUserId();
+
+                if (book.AuthorId != userid)
+                {
+                    return new HttpUnauthorizedResult("You are not authorized to perform this operation");
+                }
+
+                return View(book);
+            }
         }
 
         // POST: Book/Edit/5
         [HttpPost]
-        public ActionResult Edit(int id, FormCollection collection)
+        [Authorize]
+        public ActionResult Edit(int id, Book bookViewModel)
         {
-            try
+            if (bookViewModel.Title==null || bookViewModel.Description==null)
             {
-                // TODO: Add update logic here
+                return View(bookViewModel);
+            }
 
-                return RedirectToAction("Index");
-            }
-            catch
+            using (var db = new ApplicationDbContext())
             {
-                return View();
+                var book = db.Books.Include(b => b.Author).SingleOrDefault(b => b.Id == id);
+
+                if (book == null)
+                {
+                    return new HttpNotFoundResult($"Cannot find book with ID {id}.");
+                }
+
+                var userid = User.Identity.GetUserId();
+
+                if (book.AuthorId != userid)
+                {
+                    return new HttpUnauthorizedResult("You are not authorized to perform this operation");
+                }
+
+                book.Title = bookViewModel.Title;
+                book.Description = bookViewModel.Description;
+
+                db.SaveChanges();
+
             }
+
+            return RedirectToAction("Details",new {id = id});
+
         }
 
+
         // GET: Book/Delete/5
+        [Authorize]
         public ActionResult Delete(int id)
         {
-            return View();
+            using (var db = new ApplicationDbContext())
+            {
+                var book = db.Books.SingleOrDefault(b => b.Id == id);
+
+                if (book == null)
+                {
+                    return new HttpNotFoundResult($"Cannot find book with ID {id}.");
+                }
+
+                var userid = User.Identity.GetUserId();
+
+                if (book.AuthorId != userid)
+                {
+                    return new HttpUnauthorizedResult("You are not authorized to perform this operation");
+                }
+
+                return View(book);
+            }
         }
 
         // POST: Book/Delete/5
         [HttpPost]
-        public ActionResult Delete(int id, FormCollection collection)
+        [Authorize]
+        [ValidateAntiForgeryToken]
+        public ActionResult Delete(int id, Book bookViewModel)
         {
-            try
+            using (var db = new ApplicationDbContext())
             {
-                // TODO: Add delete logic here
+                var book = db.Books.SingleOrDefault(b => b.Id == id);
+
+                if (book == null)
+                {
+                    return new HttpNotFoundResult($"Cannot find book with ID {id}");
+                }
+
+                var userid = User.Identity.GetUserId();
+
+                if (book.AuthorId != userid)
+                {
+                    return new HttpUnauthorizedResult("You are not authorized to perform this operation");
+                }
+
+                db.Books.Remove(book);
+                db.SaveChanges();
 
                 return RedirectToAction("Index");
-            }
-            catch
-            {
-                return View();
             }
         }
     }
