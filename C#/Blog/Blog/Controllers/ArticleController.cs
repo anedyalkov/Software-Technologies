@@ -68,14 +68,14 @@ namespace Blog.Controllers
         {
             if (ModelState.IsValid)
             {
-                using (var db = new BlogDbContext())
+                using (var database = new BlogDbContext())
                 {
                     var loggedUser = this.User.Identity.GetUserId();
 
                     article.AuthorId = loggedUser;
 
-                    db.Articles.Add(article);
-                    db.SaveChanges();
+                    database.Articles.Add(article);
+                    database.SaveChanges();
                 }
 
                 return RedirectToAction("Index");
@@ -126,17 +126,17 @@ namespace Blog.Controllers
 
             using (var database = new BlogDbContext())
             {
-                var articleToBeDeleted = database.Articles
+                var article = database.Articles
                      .Where(a => a.Id == id)
                      .Include(a => a.Author)
                      .First();
 
-                if (articleToBeDeleted == null)
+                if (article == null)
                 {
                     return HttpNotFound();
                 }
 
-                database.Articles.Remove(articleToBeDeleted);
+                database.Articles.Remove(article);
                 database.SaveChanges();
 
 
