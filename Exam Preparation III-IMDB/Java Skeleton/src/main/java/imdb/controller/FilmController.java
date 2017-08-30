@@ -13,7 +13,8 @@ import imdb.repository.FilmRepository;
 import java.util.List;
 
 @Controller
-public class FilmController {
+public class
+FilmController {
 
 	private final FilmRepository filmRepository;
 
@@ -109,10 +110,12 @@ public class FilmController {
 
 	@PostMapping("/delete/{id}")
 	public String deleteProcess(@PathVariable int id) {
-		try {
-			filmRepository.delete(id);
-		} catch (Exception ex) {
-			// Task was not found -> do nothing
+		Film film = filmRepository.findOne(id);
+
+		if (film != null) {
+			filmRepository.delete(film);
+			filmRepository.flush();
+			return "redirect:/";
 		}
 		return "redirect:/";
 	}
